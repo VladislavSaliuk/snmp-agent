@@ -1,0 +1,64 @@
+# Ізольована мережа для всіх пристроїв
+networks:
+  snmp-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+
+services:
+
+  # ── Агент 1: Маршрутизатор ──────────────────────────────────────
+  router:
+    build: .
+    container_name: snmp-router
+    environment:
+      - DEVICE_NAME=CORE-ROUTER-01
+      - DEVICE_TYPE=router
+    networks:
+      snmp-net:
+        ipv4_address: 192.168.100.2
+
+  # ── Агент 2: Комутатор ───────────────────────────────────────────
+  switch:
+    build: .
+    container_name: snmp-switch
+    environment:
+      - DEVICE_NAME=CORE-SWITCH-01
+      - DEVICE_TYPE=switch
+    networks:
+      snmp-net:
+        ipv4_address: 192.168.100.3
+
+  # ── Агент 3: Сервер ──────────────────────────────────────────────
+  server:
+    build: .
+    container_name: snmp-server
+    environment:
+      - DEVICE_NAME=APP-SERVER-01
+      - DEVICE_TYPE=server
+    networks:
+      snmp-net:
+        ipv4_address: 192.168.100.4
+
+  # ── Агент 4: IED контролер (підстанція) ──────────────────────────
+  ied:
+    build: .
+    container_name: snmp-ied
+    environment:
+      - DEVICE_NAME=IED-BREAKER-01
+      - DEVICE_TYPE=ied
+    networks:
+      snmp-net:
+        ipv4_address: 192.168.100.5
+
+  # ── Zabbix ───────────────────────────────────────────────────────
+  zabbix:
+    image: zabbix/zabbix-appliance:latest
+    container_name: zabbix
+    ports:
+      - "80:80"       # веб-інтерфейс → http://localhost
+      - "162:162/udp" # приймає SNMP Traps від агентів
+    networks:
+      snmp-net:
+        ipv4_address: 192.168.100.10
