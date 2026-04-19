@@ -16,6 +16,36 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
  */
 public class SnmpTester {
 
+    public String get(String agentAddress, String oid) {
+        try {
+            TransportMapping<?> transport = new DefaultUdpTransportMapping();
+            Snmp snmp = new Snmp(transport);
+            transport.listen();
+
+            CommunityTarget<UdpAddress> target = new CommunityTarget<>();
+            target.setAddress(new UdpAddress(agentAddress));
+            target.setCommunity(new OctetString("public"));
+            target.setVersion(SnmpConstants.version2c);
+            target.setTimeout(2000);
+            target.setRetries(1);
+
+            PDU pdu = new PDU();
+            pdu.add(new VariableBinding(new OID(oid)));
+            pdu.setType(PDU.GET);
+
+            ResponseEvent<?> event = snmp.send(pdu, target);
+            snmp.close();
+
+            if (event != null && event.getResponse() != null) {
+                return event.getResponse().get(0).getVariable().toString();
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
     public static void main(String[] args) throws Exception {
 
         // Адреса агента — той самий порт що в Main.java

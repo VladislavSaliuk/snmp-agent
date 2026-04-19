@@ -63,7 +63,7 @@ public class TrapSender {
 
         // Обов'язкові поля кожного Trap-а за RFC 3416:
         pdu.add(new VariableBinding(SnmpConstants.sysUpTime,
-                new TimeTicks(System.currentTimeMillis() / 10))); // uptime в 0.01 сек
+                new TimeTicks((System.currentTimeMillis() / 100) % 4294967295L))); // uptime в 0.01 сек
         pdu.add(new VariableBinding(SnmpConstants.snmpTrapOID, trapOid)); // тип події
 
         // Наше кастомне текстове повідомлення
